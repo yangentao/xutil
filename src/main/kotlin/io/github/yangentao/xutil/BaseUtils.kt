@@ -2,12 +2,7 @@
 
 package io.github.yangentao.xutil
 
-import io.github.yangentao.types.DateTime
-import io.github.yangentao.types.GB
-import io.github.yangentao.types.KB
-import io.github.yangentao.types.MB
-import io.github.yangentao.types.format
-import io.github.yangentao.types.maxFraction
+import io.github.yangentao.types.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -223,4 +218,12 @@ class IntervalRun(private val interval: Long, initTime: Long = System.currentTim
         block()
         return true
     }
+}
+
+fun shellExec(s: String): Pair<Int, List<String>> {
+    val p = Runtime.getRuntime().exec(s)
+    p.waitFor()
+    val n = p.exitValue()
+    val ls = p.inputStream.bufferedReader().readLines()
+    return n to ls
 }
