@@ -14,25 +14,6 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
 import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.full.valueParameters
-
-class A {
-    val age: Int = 0
-    val name: String = ""
-    val ls: List<Int> = emptyList()
-
-    fun hello(a: Int, s: String) {}
-}
-
-fun main() {
-    val v = A::age.decodeValue("123")
-    println(v)
-    println(A::name.decodeValue("999"))
-    println(A::hello.valueParameters.first().decodeValue("99"))
-    println(A::hello.valueParameters.second().decodeValue("99"))
-    println(A::ls.decodeValue(listOf("11", "22", "33")))
-    println(A::ls.decodeValue("1,2,3"))
-}
 
 fun KProperty<*>.decodeValue(source: Any?): Any? {
     val v = ValueDecoder.decodeValue(this.targetInfo, source)
@@ -96,8 +77,10 @@ abstract class ValueDecoder() {
                 return null
             }
             val sourceClass = source::class
-            if (sourceClass == target.clazz) return source
-            if (sourceClass.isSubclassOf(target.clazz)) return source
+            if (!CollectionDecoder.accept(target.clazz, sourceClass)) {
+                if (sourceClass == target.clazz) return source
+                if (sourceClass.isSubclassOf(target.clazz)) return source
+            }
 
             for (d in decoders) {
                 if (d.accept(target.clazz, sourceClass)) {
