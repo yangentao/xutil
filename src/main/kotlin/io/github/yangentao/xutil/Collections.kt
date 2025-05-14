@@ -27,7 +27,10 @@ inline fun <reified T> Collection<Any>.filterTyped(): List<T> {
     return this.filter { it is T } as List<T>
 }
 
-
+@Suppress("UNCHECKED_CAST")
+inline fun <reified T> Collection<Any>.firstType(): T? {
+    return this.first { it is T } as? T
+}
 
 @Suppress("UNCHECKED_CAST")
 fun <B : Any> Collection<*>.cast(): List<B> {
@@ -37,8 +40,6 @@ fun <B : Any> Collection<*>.cast(): List<B> {
 fun <T> List<T>.sublist(from: Int): List<T> {
     return this.subList(from, size)
 }
-
-
 
 fun <T> MutableList<T>.shift(n: Int) {
     if (n in 1..this.size) {
