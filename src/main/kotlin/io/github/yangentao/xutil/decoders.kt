@@ -316,10 +316,10 @@ private object CollectionDecoder : ValueDecoder() {
     }
 
     override fun decode(targetInfo: TargetInfo, value: Any): Any? {
-        when (targetInfo.clazz) {
-            List::class, ArrayList::class -> return decodeList(targetInfo, value)
-            Set::class, HashSet::class -> return decodeSet(targetInfo, value)
-            Map::class, HashMap::class -> return decodeMap(targetInfo, value)
+        return when (targetInfo.clazz) {
+            List::class, ArrayList::class -> decodeList(targetInfo, value)
+            Set::class, HashSet::class -> decodeSet(targetInfo, value)
+            Map::class, HashMap::class -> decodeMap(targetInfo, value)
             else -> error("Not support type: ${targetInfo.clazz}, $value ")
         }
     }
@@ -374,20 +374,3 @@ private object DateDecoder : ValueDecoder() {
     }
 }
 
-private object SQLArraysDecoder : ValueDecoder() {
-    private val clsSet: Set<KClass<*>> = setOf(Array::class, BooleanArray::class, ByteArray::class, ShortArray::class, IntArray::class, LongArray::class, FloatArray::class, DoubleArray::class, CharArray::class)
-    override fun accept(target: KClass<*>, source: KClass<*>): Boolean {
-        return source.isSubclassOf(java.sql.Array::class)
-        return target in clsSet && source in clsSet
-    }
-
-    override fun decode(targetInfo: TargetInfo, value: Any): Any? {
-        when (targetInfo.clazz) {
-            BooleanArray::class -> {
-
-            }
-        }
-        return null
-    }
-
-}
