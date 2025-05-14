@@ -189,11 +189,22 @@ private object BoolDecoder : ValueDecoder() {
 
 private object CollectionDecoder : ValueDecoder() {
     override fun accept(target: KClass<*>, source: KClass<*>): Boolean {
-        return target.isSubclassOf(Collection::class)
+        return target.isSubclassOf(Collection::class) || target.isSubclassOf(Map::class)
     }
 
     private fun decodeList(targetInfo: TargetInfo, value: Any): Any? {
         when (value) {
+            is SQLArray -> {
+                val ls = ArrayList<Any?>()
+                value.resultSet.use {
+                    while (it.next()) {
+                        ls.add(it.getObject(2))
+                    }
+                }
+                value.free()
+                return ls
+            }
+
             is Iterable<*> -> {
                 if (targetInfo.hasArguments) {
                     val ls = ArrayList<Any?>()
@@ -363,9 +374,10 @@ private object DateDecoder : ValueDecoder() {
     }
 }
 
-private object ArraysDecoder : ValueDecoder() {
+private object SQLArraysDecoder : ValueDecoder() {
     private val clsSet: Set<KClass<*>> = setOf(Array::class, BooleanArray::class, ByteArray::class, ShortArray::class, IntArray::class, LongArray::class, FloatArray::class, DoubleArray::class, CharArray::class)
     override fun accept(target: KClass<*>, source: KClass<*>): Boolean {
+        return source.isSubclassOf(java.sql.Array::class)
         return target in clsSet && source in clsSet
     }
 
