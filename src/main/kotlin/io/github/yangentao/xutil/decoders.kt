@@ -31,6 +31,8 @@ fun KClass<*>.decodeValue(source: Any?): Any? {
     return ValueDecoder.decodeValue(this.targetInfo, source)
 }
 
+private typealias SQLArray = java.sql.Array
+
 class TargetInfo(val clazz: KClass<*>, val annotations: List<Annotation>, val typeArguments: List<KType>) {
     val hasArguments: Boolean get() = typeArguments.isNotEmpty()
 
@@ -193,24 +195,31 @@ private object CollectionDecoder : ValueDecoder() {
     private fun decodeList(targetInfo: TargetInfo, value: Any): Any? {
         when (value) {
             is Iterable<*> -> {
-                val ls = ArrayList<Any?>()
                 if (targetInfo.hasArguments) {
+                    val ls = ArrayList<Any?>()
                     val ti = TargetInfo(targetInfo.firstArg, targetInfo.annotations, emptyList())
                     for (v in value) {
                         val vv = ValueDecoder.decodeValue(ti, v)
                         ls.add(vv)
                     }
+                    return ls
                 } else {
-                    ls.addAll(value)
+                    if (value::class.isSubclassOf(targetInfo.clazz)) {
+                        return value
+                    } else {
+                        val ls = ArrayList<Any?>()
+                        ls.addAll(value)
+                        return ls
+                    }
                 }
-                return ls
+
             }
 
             is String -> {
                 val sc: SepChar? = targetInfo.findAnnotation()
                 val ch: Char = sc?.list ?: ','
                 val sls = value.split(ch)
-                return this.decode(targetInfo, sls)
+                return this.decodeList(targetInfo, sls)
             }
 
             else -> error("Not support type: ${targetInfo.clazz}, $value")
@@ -220,24 +229,31 @@ private object CollectionDecoder : ValueDecoder() {
     private fun decodeSet(targetInfo: TargetInfo, value: Any): Any? {
         when (value) {
             is Iterable<*> -> {
-                val aSet = HashSet<Any?>()
+
                 if (targetInfo.hasArguments) {
+                    val aSet = HashSet<Any?>()
                     val ti = TargetInfo(targetInfo.firstArg, targetInfo.annotations, emptyList())
                     for (v in value) {
                         val vv = ValueDecoder.decodeValue(ti, v)
                         aSet.add(vv)
                     }
+                    return aSet
                 } else {
-                    aSet.addAll(value)
+                    if (value::class.isSubclassOf(targetInfo.clazz)) {
+                        return value
+                    } else {
+                        val aSet = HashSet<Any?>()
+                        aSet.addAll(value)
+                        return aSet
+                    }
                 }
-                return aSet
             }
 
             is String -> {
                 val sc: SepChar? = targetInfo.findAnnotation()
                 val ch: Char = sc?.list ?: ','
                 val sls = value.split(ch)
-                return this.decode(targetInfo, sls)
+                return this.decodeSet(targetInfo, sls)
             }
 
             else -> error("Not support type: ${targetInfo.clazz}, $value")
@@ -247,8 +263,9 @@ private object CollectionDecoder : ValueDecoder() {
     private fun decodeMap(targetInfo: TargetInfo, value: Any): Any? {
         when (value) {
             is Map<*, *> -> {
-                val aMap = HashMap<Any, Any?>()
+
                 if (targetInfo.typeArguments.isNotEmpty()) {
+                    val aMap = HashMap<Any, Any?>()
                     val tKey = TargetInfo(targetInfo.firstArg, targetInfo.annotations, emptyList())
                     val tVal = TargetInfo(targetInfo.secondArg, targetInfo.annotations, emptyList())
                     for (e in value) {
@@ -256,12 +273,18 @@ private object CollectionDecoder : ValueDecoder() {
                         val vv = ValueDecoder.decodeValue(tVal, e.value)
                         if (vK != null) aMap.put(vK, vv)
                     }
+                    return aMap
                 } else {
+                    if (value::class.isSubclassOf(targetInfo.clazz)) {
+                        return value
+                    }
+                    val aMap = HashMap<Any, Any?>()
                     for (e in value) {
                         aMap.put(e.key!!, e.value)
                     }
+                    return aMap
                 }
-                return aMap
+
             }
 
             is String -> {
@@ -341,11 +364,17 @@ private object DateDecoder : ValueDecoder() {
 }
 
 private object ArraysDecoder : ValueDecoder() {
+    private val clsSet: Set<KClass<*>> = setOf(Array::class, BooleanArray::class, ByteArray::class, ShortArray::class, IntArray::class, LongArray::class, FloatArray::class, DoubleArray::class, CharArray::class)
     override fun accept(target: KClass<*>, source: KClass<*>): Boolean {
-        return false
+        return target in clsSet && source in clsSet
     }
 
     override fun decode(targetInfo: TargetInfo, value: Any): Any? {
+        when (targetInfo.clazz) {
+            BooleanArray::class -> {
+
+            }
+        }
         return null
     }
 
