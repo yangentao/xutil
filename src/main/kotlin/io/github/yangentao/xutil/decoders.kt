@@ -18,13 +18,13 @@ import kotlin.reflect.full.isSubclassOf
 fun KProperty<*>.decodeValue(source: Any?): Any? {
     val v = ValueDecoder.decodeValue(this.targetInfo, source)
     if (v != null || this.returnType.isMarkedNullable) return v
-    error("null value")
+    error("null value, $this")
 }
 
 fun KParameter.decodeValue(source: Any?): Any? {
     val v = ValueDecoder.decodeValue(this.targetInfo, source)
     if (v != null || this.type.isMarkedNullable || this.isOptional) return v
-    error("null value")
+    error("null value, $this")
 }
 
 fun KClass<*>.decodeValue(source: Any?): Any? {
@@ -338,4 +338,15 @@ private object DateDecoder : ValueDecoder() {
             else -> error("NOT support type: ${targetInfo.clazz}")
         }
     }
+}
+
+private object ArraysDecoder : ValueDecoder() {
+    override fun accept(target: KClass<*>, source: KClass<*>): Boolean {
+        return false
+    }
+
+    override fun decode(targetInfo: TargetInfo, value: Any): Any? {
+        return null
+    }
+
 }
