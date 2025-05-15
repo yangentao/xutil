@@ -1,4 +1,4 @@
-@file:Suppress("KotlinConstantConditions", "unused")
+@file:Suppress("KotlinConstantConditions" )
 
 package io.github.yangentao.xutil
 
@@ -47,10 +47,7 @@ inline fun CharSequence?.isNotNullEmpty(): Boolean {
     return this != null && this.length > 0
 }
 
-infix fun String?.or(other: String): String {
-    if (this.isNullOrEmpty()) return other
-    return this
-}
+
 
 inline fun <reified T : Comparable<T>> T.ifGreat(v: T, block: (T) -> Unit): T {
     if (this > v) block(this)
@@ -62,15 +59,7 @@ inline fun <reified T : Comparable<T>> T.ifGreatEqual(v: T, block: (T) -> Unit):
     return this
 }
 
-inline fun <reified T : Comparable<T>> T.greatEqual(v: T): T {
-    if (this < v) return v
-    return this
-}
 
-inline fun <reified T : Comparable<T>> T.lessEqual(v: T): T {
-    if (this > v) return v
-    return this
-}
 
 inline fun <reified T : Comparable<T>> T.onLE(v: T, newValue: T): T {
     if (this <= v) return newValue
