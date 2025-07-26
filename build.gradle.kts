@@ -7,7 +7,7 @@ buildscript {
     }
 }
 plugins {
-    kotlin("jvm") version "2.1.20"
+    kotlin("jvm") version "2.2.0"
     signing
     id("maven-publish")
     id("org.jetbrains.dokka") version "2.0.0"
@@ -16,7 +16,7 @@ plugins {
 
 group = "io.github.yangentao"
 
-version = "1.0.0"
+version = "2.0.0"
 val artifactName = "xutil"
 val githubLib = "xutil"
 val descLib = "Kotlin utils."
@@ -24,6 +24,7 @@ val descLib = "Kotlin utils."
 
 repositories {
     mavenCentral()
+    mavenLocal()
 //    maven("https://app800.cn/maven/repository/public/")
 }
 
@@ -31,7 +32,7 @@ dependencies {
     testImplementation(kotlin("test"))
     implementation(kotlin("reflect"))
     implementation(kotlin("stdlib"))
-    api("io.github.yangentao:types:1.0.3")
+    api("io.github.yangentao:types:[2.0.0,)")
 }
 
 tasks.test {

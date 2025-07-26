@@ -1,7 +1,7 @@
 package util
 
-import io.github.yangentao.xutil.decodeValue
-import io.github.yangentao.xutil.second
+import io.github.yangentao.types.decodeValue
+import io.github.yangentao.types.second
 import kotlin.reflect.full.valueParameters
 import kotlin.test.Test
 import kotlin.test.assertContentEquals

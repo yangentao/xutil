@@ -2,6 +2,7 @@
 
 package io.github.yangentao.xutil
 
+import io.github.yangentao.types.printX
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 

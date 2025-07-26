@@ -1,5 +1,6 @@
 package io.github.yangentao.xutil
 
+import io.github.yangentao.types.printX
 
 /**
  * Created by entaoyang@163.com on 2017/4/27.

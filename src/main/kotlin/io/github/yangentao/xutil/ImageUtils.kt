@@ -1,5 +1,6 @@
 package io.github.yangentao.xutil
 
+import io.github.yangentao.types.printX
 import java.awt.Color
 import java.awt.Font
 import java.awt.image.BufferedImage
