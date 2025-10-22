@@ -2,15 +2,16 @@
 
 package io.github.yangentao.xutil
 
+import io.github.yangentao.types.FutureState
+import io.github.yangentao.types.asyncTask
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 //不能使用 synchronized
 class XPromise<T> {
     private val sem = Semaphore(0, true)
-    private var _done = AtomicBoolean(false)
-    private var _canceled = AtomicBoolean(false)
+    private var _state = AtomicReference<FutureState>(FutureState.RUNNING)
 
     @Volatile
     private var _resulet: T? = null
@@ -18,8 +19,8 @@ class XPromise<T> {
     @Volatile
     private var _cause: Throwable? = null
 
-    private var _onResult: ((T) -> Unit)? = null
     private var _onDone: ((XPromise<T>) -> Unit)? = null
+    private var _onResult: ((T) -> Unit)? = null
     private var _onError: ((Throwable) -> Unit)? = null
     var doCancel: (() -> Boolean)? = null
 
@@ -55,23 +56,23 @@ class XPromise<T> {
     }
 
     fun setResult(value: T) {
-        if (isDone()) error("State already been done.")
-        _done.set(true)
+        if (isDone()) return
+        _state.set(FutureState.SUCCESS)
         _resulet = value
         unlock()
 
-        runThreadTask {
+        asyncTask {
             _onResult?.invoke(value)
             _onDone?.invoke(this)
         }
     }
 
     fun setError(cause: Throwable) {
-        if (isDone()) error("State already been done.")
-        _done.set(true)
+        if (isDone()) return
+        _state.set(FutureState.FAILED)
         _cause = cause
         unlock()
-        runThreadTask {
+        asyncTask {
             _onError?.invoke(cause)
             _onDone?.invoke(this)
         }
@@ -79,30 +80,29 @@ class XPromise<T> {
 
     fun cancel(): Boolean {
         if (isDone()) return false
-        _done.set(true)
-        _canceled.set(true)
+        _state.set(FutureState.CANCELLED)
         val b = doCancel?.invoke()
         unlock()
-        runThreadTask {
+        asyncTask {
             _onDone?.invoke(this)
         }
         return b != false
     }
 
     fun isDone(): Boolean {
-        return _done.get()
+        return _state.get() != FutureState.RUNNING
     }
 
     fun isSuccess(): Boolean {
-        return _done.get() && _cause == null && !_canceled.get()
+        return _state.get() == FutureState.SUCCESS
     }
 
     fun isError(): Boolean {
-        return _done.get() && _cause != null
+        return _state.get() == FutureState.FAILED
     }
 
     fun isCancelled(): Boolean {
-        return _done.get() && _canceled.get()
+        return _state.get() == FutureState.CANCELLED
     }
 
     fun tryGet(): T? {
@@ -143,8 +143,11 @@ class XPromise<T> {
         if (isDone()) return true
         if (timeout <= 0) {
             sem.acquire()
+            sem.release()
         } else {
-            sem.tryAcquire(timeout, unit)
+            if (sem.tryAcquire(timeout, unit)) {
+                sem.release()
+            }
         }
         return isDone()
     }
@@ -153,6 +156,6 @@ class XPromise<T> {
 
 class AsyncException(msg: String, cause: Throwable? = null) : Exception(msg, cause)
 
-fun errorAsync(msg: String, cause: Throwable? = null): Nothing {
+private fun errorAsync(msg: String, cause: Throwable? = null): Nothing {
     throw AsyncException(msg, cause)
 }

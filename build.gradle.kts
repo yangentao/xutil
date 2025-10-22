@@ -16,7 +16,7 @@ plugins {
 
 group = "io.github.yangentao"
 
-version = "2.0.0"
+version = "2.0.1"
 val artifactName = "xutil"
 val githubLib = "xutil"
 val descLib = "Kotlin utils."
@@ -32,7 +32,7 @@ dependencies {
     testImplementation(kotlin("test"))
     implementation(kotlin("reflect"))
     implementation(kotlin("stdlib"))
-    api("io.github.yangentao:types:[2.0.0,)")
+    api("io.github.yangentao:types:[2.0.13,)")
 }
 
 tasks.test {
