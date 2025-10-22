@@ -31,26 +31,35 @@ class SyncLock {
 
 private class AsyncTask<T>(val block: () -> T) : Runnable {
     val promise: XPromise<T> = XPromise()
-    var cancelled = AtomicBoolean(false)
-    var running = AtomicBoolean(false)
+    private var running = AtomicBoolean(false)
+
+    @Volatile
+    private var thread: Thread? = null
 
     init {
         promise.doCancel = {
-            cancelled.set(true)
-            !running.get()
+            if (running.get()) {
+                thread?.interrupt()
+            }
+            running.set(false)
+            true
         }
     }
 
     override fun run() {
-        if (cancelled.get()) return
+        thread = Thread.currentThread()
         running.set(true)
         try {
             val v = block.invoke()
             promise.setResult(v)
+        } catch (ie: InterruptedException) {
+            promise.doCancel = null
         } catch (e: Throwable) {
             promise.setError(e)
         } finally {
             running.set(false)
+            thread = null
+            promise.doCancel = null
         }
     }
 }
